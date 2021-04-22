@@ -2,7 +2,7 @@
 - [Strategy Pattern](#strategy-pattern)
   - [Example: Travelling](#example-travelling)
 - [Observer Pattern](#observer-pattern)
-  - [Example: Auctioneer and Bidders](#example-auctioneer-and-bidders)
+  - [Example: Auctioneer and Bidders](#example-auction)
 - [Decorator Pattern](#decorator-pattern)
   - [Example: Christmas Tree](#example-christmas-tree)
 - [Factory Pattern](#factory-pattern)
@@ -19,11 +19,13 @@
 
 # Strategy Pattern
 
-Defines a family of algorithms, encapsulates each one, and makes them interchangeable.  Strategy lets the algorithm vary independently from clients that use it.
+Defines a family of algorithms, encapsulates each one, and makes them interchangeable.  Strategy enables the client to select the algortithm at runtime; the algorithm varies independently from the clients that use it.
 
 ![Strategy UML](strategy-uml.png)
 
 ## Example: Travelling
+
+Here we will implement a simple program that takes a person to a given location through different strategies - the person can travel by car or bus.  The Client only interacts with the context as follows:
 
 ```java
 public class Client {
@@ -34,59 +36,94 @@ public class Client {
         Person rob = new Person("Rob", "130 Street 2");
         TravelContext context = new TravelContext();
 
-        /**
-        * The Client creates a specific strategy object and passes it to the context.
-        * The context exposes a setter which lets clients replace the strategy associated with the context at runtime.
-        **/
-        CarStrategy car = new CarStrategy();
-        context.setStrategy(car);
+        // The Client creates a specific strategy object and passes it to the context
+        CarStrategy useCar = new CarStrategy();
+        // The context exposes a setter which lets clients replace the strategy associated with the context at runtime
+        context.setStrategy(useCar);
 
-        context.takeTrip(bob, "airport");
+        context.takeTrip(bob, "terminal 1");
+        context.takeTrip(rob, "terminal 2");
+
+        // The client can change strategy at any time, through the context, without having to worry about implementation
+        BusStrategy useBus = new BusStrategy();
+
+        context.takeTrip(bob, "hilton hotel");
         context.takeTrip(rob, "fairmont hotel");
     }
 }
+```
 
+```
+Bob has travelled by car to terminal 1
+Rob has travelled by car to terminal 2
+
+Bob has travelled by car to hilton hotel
+Rob has travelled by car to fairmont hotel
+```
+
+The context delegates the algorithm to a linked strategy object instead of doing the work itself. The context does not know what type of strategy it uses or how the algorithm is executed, it simply works with an interface.  In this way, the context is decoupled from the specific strategies and work with all strategies that implement a generic interface.
+
+```java
+/**
+ * A class for a travel context. It exposes a setter method by mean of which the client can pass a chosen strategy and
+ * a call to an algorithm to be implemented by all the valid strategies that can be passed.
+ */
 public class TravelContext {
 
     private TravelStrategy strategy;
 
+    /**
+     * Sets this context's strategy.
+     *
+     * @param strategy Given strategy to be used (passed by client).
+     */
     public void setStrategy(TravelStrategy strategy){
         this.strategy = strategy;
     }
 
-    /** The context calls the algorithm on the linked strategy object each time it needs to run the algorithm.
 
-    * The context does not know what type of strategy it uses or how the algorithm is executed.
-    **/
-public void takeTrip(Person person, String location){
+    /**
+     * The algorithm to be called on all the interchangeable strategies.
+     *
+     * @param person Person that will travel.
+     * @param location Location to take the Person object to.
+     */
+    public void takeTrip(Person person, String location){
         this.strategy.travel(person, location);
     }
-}
 
-// The interface encapsulates the behavior of the algorithms
+}
+```
+
+This is the generic interface that declares the functionality to be implemented by the corresponding family of algorithms.
+
+```java
 public interface TravelStrategy {
 
     public void travel(Person person, String location);
 
 }
+```
 
-// Concrete implementations of the strategy
+These are the concrete implementations of the Strategy interface.  Notice that the details of how each strategy achieves the algorithm are completely hidden from the context or client.
+
+```java
 public class CarStrategy implements TravelStrategy{
 
     @Override
     public void travel(Person person, String location) {
         person.setLocation(location);
-        System.out.printf(person.getName() + " has travelled by car to " + person.getLocation() + "\n");
+        System.out.println(person.getName() + " has travelled by car to " + person.getLocation() + "\n");
     }
 }
 
 public class BusStrategy implements TravelStrategy{
 
-    @Override
-    public void travel(Person person, String location) {
-        person.setLocation(location);
-        System.out.println(person.getName() + " has travelled by bus to " + person.getLocation() + "\n");
-    }
+  @Override
+  public void travel(Person person, String location) {
+    person.setLocation(location);
+    System.out.println(person.getName() + " has travelled by bus to " + person.getLocation() + "\n");
+  }
 }
 ```
 
@@ -99,21 +136,44 @@ Defines a one-to-many dependency between objects so that when one object changes
 
 **Push Communication Method**: The Observable just sends all information to the observers; the observers decide what to use.
 
-## Example: Auctioneer and Bidders
+## Example: Auction
+
+This design pattern can be modelled as an auction (Client) with an auctioneer (Observable) and bidders (Observers) getting
+information about the status of the transaction from the auctioneer.
+
+```java
+/**
+ * A class for a Bid. A bid has a unique id and an amount.
+ */
+public class Bid {
+
+    private static int currID = 1;
+    public int amount;
+    public int id;
+
+    public Bid(int amount){
+        this.amount = amount;
+        this.id = Bid.currID;
+        increaseCurrID();
+    }
+
+    private  static void increaseCurrID(){
+        Bid.currID++;
+    }
+}
+```
 
 ```java
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
-
 /**
- * A class for an auctioneer at an auction.  An auctioneer receives bids, 
- * keeps track of the highest bid and notifies all bidders a new higher bid 
- * has been placed.
-*/
+ * A class for an auctioneer at an auction.  An auctioneer receives bids,
+ * keeps track of the highest bid and notifies all bidders a new higher bid
+ * has been placed.  The auctioneer is observed by the bidders.
+ */
 public class Auctioneer extends Observable {
-
     ArrayList<Bid> bids; //list of bids received
     int highestBid;
 
@@ -126,7 +186,7 @@ public class Auctioneer extends Observable {
     /**
      * Receives a passed bid.  If the bid is higher than the current highest bid,
      * the highest bid is updated and auctioneers are notified.
-    */
+     */
     public void receiveBid(Bid bid){
         this.bids.add(bid);
         if (bid.amount > this.highestBid){
@@ -138,36 +198,56 @@ public class Auctioneer extends Observable {
 }
 
 /**
- * A class for a bidder in an auction. A bidder passes bids.
-*/
-public class Bidder implements Observer {
+ * A class for a bidder in an auction. A bidder makes bids and receives updates from an
+ * Observable that it has been observing.
+ */
+public class Bidder implements Observer{
 
-    public Bid makeBid(int amount, String id){
-        Bid bid = new Bid(amount, id);
-        return bid;}
+  /**
+   * Returns a new Bid object with a unique ID for the given amount.
+   *
+   * @param amount  Amount the bidder is offering.
+   * @return A Bid object for the amount offered.
+   */
+  public Bid makeBid(int amount){
+    Bid bid = new Bid(amount);
+    return bid;}
 
-    @Override
-    public void update(Observable o, Object arg) {
-        System.out.println(arg);
-    }
+  @Override
+  public void update(Observable o, Object arg) {
+    System.out.println(arg);
+  }
 }
+```
 
+Now notice how the observable and observers are loosely coupled.  They interact as needed but have very little knowledge 
+about each other.
+- The `Observable` only knows that its observers implement the `Observer` interface.  It knows nothing about their class or
+what they do.
+- We can add all sorts of `Observer`s without the need to modify the `Observable`.
+- As long as both parties meet their design pattern expectations, changes to either the `Observable` or the `Observer`s
+will not affect each other.
+  
+```java
+import java.util.ArrayList;
 /**
- * A class for an auction.  An auction has an auctioneer and a list of bidders.
-*/
+ * A class for an auction.  An auction has an auctioneer and a list of bidders that are observers
+ * of the auctioneer.  An auction creates its own auctioneer but takes in bidders, if given any.
+ */
 public class Auction {
 
-    Auctioneer auctioneer;
-    ArrayList<Bidder> bidders;
+    public Auctioneer auctioneer;
+    private ArrayList<Bidder> bidders;
 
     public Auction(){
         this.auctioneer = new Auctioneer();
-        this.bidders = new ArrayList<Bidder>();
+        this.bidders = new ArrayList<>();
     }
 
     public void addBidder(Bidder bidder){
         this.bidders.add(bidder);
-        this.auctioneer.addObserver(bidder); // new bidders observe the auctioneer
+        // new bidders in the auction are observers of the auctioneer
+        this.auctioneer.addObserver(bidder);
     }
 
     public static void main(String[] args){
@@ -176,36 +256,34 @@ public class Auction {
         Auction auction = new Auction();
         Bidder bidder1 = new Bidder();
         Bidder bidder2 = new Bidder();
-        Bidder bidder3 = new Bidder();
 
+
+        // Add the bidders to the auction
         auction.addBidder(bidder1);
         auction.addBidder(bidder2);
-        auction.addBidder(bidder3);
 
-        Auctioneer auctioneer = auction.auctioneer;
-        auctioneer.receiveBid(bidder1.makeBid(20, "Bid01"));
-        auctioneer.receiveBid(bidder2.makeBid(50, "Bid02"));
-    }
-}
+        // Have the auctioneer receive bids from the bidders
+        // If a higher bid is made, all the bidders are automatically notified of the update
+        auction.auctioneer.receiveBid(bidder1.makeBid(50));
+        auction.auctioneer.receiveBid(bidder2.makeBid(70));
+        auction.auctioneer.receiveBid(bidder1.makeBid(100));
 
-/** 
-* A class for a Bid in an auction.  A bid has an amount and an ID.
-*/
-public class Bid {
-
-    int amount;
-    String id;
-
-    public Bid(int amount, String id){
-        this.amount = amount;
-        this.id = id;
     }
 }
 ```
 
+``
+The highest bid is now 50 with ID: 1
+The highest bid is now 50 with ID: 1
+The highest bid is now 70 with ID: 2
+The highest bid is now 70 with ID: 2
+The highest bid is now 100 with ID: 3
+The highest bid is now 100 with ID: 3
+``
+  
 # Decorator Pattern
 
-Attaches additional responsibilities to an object dynamically.  The decorator pattern involves a set of decorating classes that are used to wrap concrete components.  Decorators provide a flexible alternative to subclassing for extending functionality.  
+Attaches additional responsibilities to an object dynamically.  The decorator pattern involves a set of decorating classes that are used to wrap concrete components.  Decorators provide a flexible alternative to subclassing for extending functionality.
 
 ![Decorator UML](decorator-uml.png)
 
