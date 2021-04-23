@@ -287,13 +287,19 @@ By dynamically composing objects, you can add new functionality by writing new "
 
 ## Example: Christmas Tree
 
+First we define a common interface for the concrete component, and the decorator classes.
+
 ```java
 public interface ChristmasTree {
 
     public String decorate();
 }
+```
 
-// Concrete component
+Now we define the base classes, i.e. the **basic component class** and the **abstract decorator class** for all the decorators that we will implement.
+
+```java
+// Concrete component class
 public class PineChristmasTree implements ChristmasTree{
 
     @Override
@@ -311,8 +317,11 @@ public abstract class Decorator implements ChristmasTree{
         this.wrappee = wrappee;
     }
 }
+```
 
-// Concrete decorators
+Now we implement the **concrete decorator classes** which inherit from the abstract `Decorator` class.  They keep a reference to the object they are wrapping so that they can chain method calls down to the basic component class, this component is passed to their constructor.
+
+```java
 public class TreeLights extends Decorator{
 
     public TreeLights(ChristmasTree wrappee) {
@@ -336,16 +345,27 @@ public class TreeTopper extends Decorator{
         return this.wrappee.decorate() + " with tree topper";
     }
 }
+```
 
+Decorators are meant to add behaviour to the object they wrap.  So the basic component class gets additional behaviour added to it, not by adding more code into it, but by having the client wrap it in decorators expanding its behaviour.
+
+```java
 // Client wraps concrete components with decorator classes
 public class TreeClient {
 
-    public static void main(String[] args) {
-        ChristmasTree myTree = new TreeTopper(new TreeLights(new PineChristmasTree()));
+  public static void main(String[] args) {
+    ChristmasTree myTree = new TreeTopper(new TreeLights(new PineChristmasTree()));
+    ChristmasTree yourTree = new TreeTopper(new PineChristmasTree());
 
-        System.out.println("Let's decorate my tree: " + myTree.decorate());
-    }
+    System.out.println("Let's decorate my tree: " + myTree.decorate());
+    System.out.println("Let's decorate your tree: " + yourTree.decorate());
+  }
 }
+```
+
+```
+Let's decorate my tree: Pine christmas tree with lights with tree topper
+Let's decorate your tree: Pine christmas tree with tree topper
 ```
 
 # Factory Pattern
@@ -356,7 +376,7 @@ Defines an abstract class for creating an object, but allows subclasses to decid
 
 The Creator class gives you an interface with a method for creating objects, also known as the factory method.
 
-Any other methods implemented in the abstract Creator class are written to operate on products produced but the factory method – the creator class is written without knowledge of the actual products that will be created.
+Any other methods implemented in the abstract Creator class are written to operate on products produced, but the factory method – the creator class is written without knowledge of the actual products that will be created.
 
 ## Example: Pizza Stores
 
