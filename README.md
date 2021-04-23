@@ -19,9 +19,9 @@
 
 # Strategy Pattern
 
-Defines a family of algorithms, encapsulates each one, and makes them interchangeable.  Strategy enables the client to select the algortithm at runtime; the algorithm varies independently from the clients that use it.
+Defines a family of algorithms, encapsulates each one, and makes them interchangeable.  Strategy enables the client to select the algorithm at runtime; the algorithm varies independently of the clients that use it.
 
-![Strategy UML](strategy-uml.png)
+![Strategy UML](docs/strategy-uml.png)
 
 ## Example: Travelling
 
@@ -130,7 +130,7 @@ public class BusStrategy implements TravelStrategy{
 # Observer Pattern
 Defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
 
-![Observer UML](observer-uml.png)
+![Observer UML](docs/observer-uml.png)
 
 **Pull Communication Method**: The Observable just sends a short message to observers to notify them that something has changed, the observers are responsible for pulling the data they need from the Observer.
 
@@ -138,8 +138,7 @@ Defines a one-to-many dependency between objects so that when one object changes
 
 ## Example: Auction
 
-This design pattern can be modelled as an auction (Client) with an auctioneer (Observable) and bidders (Observers) getting
-information about the status of the transaction from the auctioneer.
+This design pattern can be modelled as an auction (Client) with an auctioneer (Observable) and bidders (Observers) getting information about the status of the transaction from the auctioneer.
 
 ```java
 /**
@@ -220,13 +219,10 @@ public class Bidder implements Observer{
 }
 ```
 
-Now notice how the observable and observers are loosely coupled.  They interact as needed but have very little knowledge 
-about each other.
-- The `Observable` only knows that its observers implement the `Observer` interface.  It knows nothing about their class or
-what they do.
+Now notice how the observable and observers are loosely coupled.  They interact as needed but have very little knowledge about each other.
+- The `Observable` only knows that its observers implement the `Observer` interface.  It knows nothing about their class or what they do.
 - We can add all sorts of `Observer`s without the need to modify the `Observable`.
-- As long as both parties meet their design pattern expectations, changes to either the `Observable` or the `Observer`s
-will not affect each other.
+- As long as both parties meet their design pattern expectations, changes to either the `Observable` or the `Observer`s will not affect each other.
   
 ```java
 import java.util.ArrayList;
@@ -272,20 +268,22 @@ public class Auction {
 }
 ```
 
-``
+```
 The highest bid is now 50 with ID: 1
 The highest bid is now 50 with ID: 1
 The highest bid is now 70 with ID: 2
 The highest bid is now 70 with ID: 2
 The highest bid is now 100 with ID: 3
 The highest bid is now 100 with ID: 3
-``
+```
   
 # Decorator Pattern
 
 Attaches additional responsibilities to an object dynamically.  The decorator pattern involves a set of decorating classes that are used to wrap concrete components.  Decorators provide a flexible alternative to subclassing for extending functionality.
 
-![Decorator UML](decorator-uml.png)
+By dynamically composing objects, you can add new functionality by writing new "decorating" code rather than changing existing code.
+
+![Decorator UML](docs/decorator-uml.png)
 
 ## Example: Christmas Tree
 
@@ -354,7 +352,7 @@ public class TreeClient {
 
 Defines an abstract class for creating an object, but allows subclasses to decide what objects to instantiate.  It lets a class defer instantiation to subclasses.
 
-![Factory UML](factory-uml.png)
+![Factory UML](docs/factory-uml.png)
 
 The Creator class gives you an interface with a method for creating objects, also known as the factory method.
 
@@ -488,7 +486,7 @@ Boxing pizza...
 
 Ensures a class has only one instance of an object and provides a global point of access. We are letting the class manage a single instance of itself.
 
-![Singleton UML](singleton-uml.png)
+![Singleton UML](docs/singleton-uml.png)
 
 ## Example: Chocolate Boiler
 
@@ -535,7 +533,7 @@ Encapsulates a request as an object, thereby letting you parametrize other objec
 
 In this way the same object can be parametrized in multiple ways with all sort of commands as long as they implement the Command interface!
 
-![Command UML](command-uml.png)
+![Command UML](docs/command-uml.png)
 
 A command object encapsulates a request by binding together a set of actions on a specific receiver.  To achieve this it packages the actions and the receiver into an object that only exposes the method `execute()`.
 
@@ -733,7 +731,7 @@ The light in the front porch is on.
 
 Provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
 
-![Iterator UML](iterator-uml.png)
+![Iterator UML](docs/iterator-uml.png)
 
 ## Example: Song Iterator
 
