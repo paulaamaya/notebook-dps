@@ -376,28 +376,94 @@ Defines an abstract class for creating an object, but allows subclasses to decid
 
 The Creator class gives you an interface with a method for creating objects, also known as the factory method.
 
-Any other methods implemented in the abstract Creator class are written to operate on products produced, but the factory method – the creator class is written without knowledge of the actual products that will be created.
+Any other methods implemented in the abstract Creator class are written to operate on products produced, except the factory method – the creator class is written without knowledge of the actual products that will be created.
 
 ## Example: Pizza Stores
 
+We begin with the abstract `Product` class that all the concrete products will inherit from.  
+This abstract product class will provide some defaults while the concrete products will define the details  - this part is nothing fancy, just inheritance in its purest form.
+
+We can think of these `Product` classes as the tiny factories that the store call on to make their pizzas.
+
 ```java
-// Abstract 'Creator' class
-public abstract class PizzaStore {
+// Abstract 'Product' class
+public class Pizza {
 
-    public Pizza orderPizza(String type){
-        Pizza pizza = this.factoryMethod(type);
+  String crust;
+  String type;
+  ArrayList<String> ingredients;
 
-        pizza.prepare();
-        pizza.bake();
-        pizza.box();
+  public Pizza(String crust, String type, ArrayList<String> ingredients){
+    this.crust = crust;
+    this.type = type;
+    this.ingredients = ingredients;
+  }
 
-        return pizza;
+  public void prepare(){
+    String info = "Preparing a " + this.type + " pizza with " +
+            this.crust + " crust";
+
+    for(String ingredient : this.ingredients){
+      info += " and " + ingredient;
     }
 
-    public abstract Pizza factoryMethod(String type);
+    System.out.println(info);
+  }
+
+  public void bake(){
+    System.out.println("Baking pizza...");
+  }
+
+  public void box(){ System.out.println("Boxing pizza..."); }
+
 }
 
-// Concrete creators decide which product class to instantiate
+// Concrete product classes
+public class NYPepperoniPizza extends Pizza {
+
+  public NYPepperoniPizza(){
+    super("thin", "pepperoni", new ArrayList<String>());
+    this.ingredients.add("cheese");
+    this.ingredients.add("pepperoni");
+    this.ingredients.add("oregano");
+  }
+}
+
+public class ChicagoPepperoniPizza extends Pizza{
+
+  public ChicagoPepperoniPizza(){
+    super("thick", "pepperoni", new ArrayList<String>());
+    this.ingredients.add("cheese");
+    this.ingredients.add("pepperoni");
+    this.ingredients.add("oil");
+  }
+}
+```
+
+Now we are going to define the `PizzaStore` classes which will encapsulate the creation of the pizzas through the factories we defined above.  We start off with a basic `PizzaStore` abstract class that defines the common methods amongst store franchises - such as the flow of preparing an order - and an abstract factory method.
+
+```java
+public abstract class PizzaStore {
+
+  public Pizza orderPizza(String type){
+    Pizza pizza = this.makePizza(type);
+
+    pizza.prepare();
+    pizza.bake();
+    pizza.box();
+
+    return pizza;
+  }
+
+  public abstract Pizza makePizza(String type);
+}
+```
+
+A cheese pizza in Chicago is different from a cheese Pizza in NYC.  However, it is the store in each city that worries about making the right one, not the client ordering the pizza!
+
+The concrete creators decide which concrete product class to instantiate.
+
+```java
 public class NYPizzaStore extends PizzaStore{
 
     @Override
@@ -409,72 +475,19 @@ public class NYPizzaStore extends PizzaStore{
     }
 }
 
-public class ChicagoPizzaStore extends PizzaStore{
+public class ChicagoPizzaStore extends PizzaStore {
 
-    @Override
-    public Pizza factoryMethod(String type) {
-        return switch (type) {
-            case "pepperoni" -> new ChicagoPepperoniPizza();
-            default -> new ChicagoCheesePizza();
-        };
-    }
+  @Override
+  public Pizza factoryMethod(String type) {
+    return switch (type) {
+      case "pepperoni" -> new ChicagoPepperoniPizza();
+      default -> new ChicagoCheesePizza();
+    };
+  }
 }
-
-// Abstract 'Product' class
-public class Pizza {
-
-    String crust;
-    String type;
-    ArrayList<String> ingredients;
-
-    public Pizza(String crust, String type, ArrayList<String> ingredients){
-        this.crust = crust;
-        this.type = type;
-        this.ingredients = ingredients;
-    }
-
-    public void prepare(){
-        String info = "Preparing a " + this.type + " pizza with " +
-                this.crust + " crust";
-
-        for(String ingredient : this.ingredients){
-            info += " and " + ingredient;
-        }
-
-        System.out.println(info);
-    }
-
-    public void bake(){
-        System.out.println("Baking pizza...");
-    }
-
-    public void box(){ System.out.println("Boxing pizza..."); }
-
-}
-
-// Concrete product classes
-public class NYPepperoniPizza extends Pizza {
-
-    public NYPepperoniPizza(){
-        super("thin", "pepperoni", new ArrayList<String>());
-        this.ingredients.add("cheese");
-        this.ingredients.add("pepperoni");
-        this.ingredients.add("oregano");
-    }
-}
-
-public class ChicagoPepperoniPizza extends Pizza{
-
-    public ChicagoPepperoniPizza(){
-        super("thick", "pepperoni", new ArrayList<String>());
-        this.ingredients.add("cheese");
-        this.ingredients.add("pepperoni");
-        this.ingredients.add("oil");
-    }
-} 
 ```
 
-Notice how encapsulated the creation of the pizzas is from the client:
+As it should, the client only deals with the stores and has no knowledge of the intricacies behind creating the right pizza.  The creation of the `Product` is completely encapsulated by the `Creator`.
 
 ```java
 public class Client {

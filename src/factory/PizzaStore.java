@@ -3,7 +3,7 @@ package factory;
     public abstract class PizzaStore {
 
         public Pizza orderPizza(String type){
-            Pizza pizza = this.factoryMethod(type);
+            Pizza pizza = this.makePizza(type);
 
             pizza.prepare();
             pizza.bake();
@@ -12,5 +12,5 @@ package factory;
             return pizza;
         }
 
-        public abstract Pizza factoryMethod(String type);
+        public abstract Pizza makePizza(String type);
     }
