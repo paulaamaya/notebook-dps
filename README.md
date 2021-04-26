@@ -819,7 +819,7 @@ public class MacroCommand implements Command{
 }
 ```
 
-Now notice how the client sets the entire mechanism in motion by passing command objects to the invoker.  These commands incapsulate the actions from the user.  Also, the invoker is completely unaware of the receivers that have been programmed and how they work.
+Now notice how the client sets the entire mechanism in motion by passing command objects to the invoker.  These commands incapsulate the actions from the user.  Also, **the invoker is completely unaware of the receivers that have been programmed into the commands and how they work**.
 
 ```java
 public class Client {
@@ -868,100 +868,175 @@ The light in the front porch is on.
 
 # Facade Pattern
 
-# Template Method
+# Template Pattern
 
 # Iterator Pattern
 
 Provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
 
+- `Iterable` objects give us a "dummy" object called an `Iterator` that gives all a standard method of traversing .
+- The `Iterator` deals with all the messy details of tranversing the aggregate depending on its implementation.
+
 ![Iterator UML](docs/iterator-uml.png)
 
 ## Example: Song Iterator
 
+Suppose are trying to work with two lists of songs, one is implemented in an `Array` while the other in a `HashMap`.  However, we would like to write one single program that can tranverse both lists seamlessly, after all they are both the same principle: a numbered list of Song objects.
+
+We begin by making a simple expansion to the existing classes and binding them to the `Iterable` interface.  This involves a minimal change to the exsiting classes - defining a getter method that returns an `Iterator`.
+
 ```java
-// Array implementation of song list
-public class YourSongs implements Iterable<Song> {
+/**
+ * A class for a song list implemented using a HashMap.
+ */
+public class MySongs implements Iterable<Song> {
 
-Song[] songs;
-	
-	public YourSongs() {
-		songs = new Song[3];
-		
-		songs[0] = new Song("Britney Spears", "Hit Me Baby One More Time");
-		songs[1] = new Song("Aqua", "Barbie Girl");
-		songs[2] = new Song("Spice Girls", "Wannabe");
+    HashMap<Integer, Song> mySongs;
 
-	}
+    public MySongs() {
+        mySongs = new HashMap<Integer, Song>();
 
-	public Iterator<Song> iterator(){
+        mySongs.put(0, new Song("Green Day", "American Idiot"));
+        mySongs.put(1, new Song("AC/DC", "Highway to Hell"));
+        mySongs.put(2, new Song("Bon Jovi", "Livin' On a Prayer"));
+    }
+
+    @Override
+    public Iterator<Song> iterator() {
+        return new MySongsIterator(mySongs);
+    }
+}
+```
+
+```java
+/**
+ * A class for a list of songs implemented using an Array.
+ */
+public class YourSongs {
+
+    Song[] songs;
+
+    public YourSongs() {
+        songs = new Song[3];
+
+        songs[0] = new Song("Britney Spears", "Hit Me Baby One More Time");
+        songs[1] = new Song("Aqua", "Barbie Girl");
+        songs[2] = new Song("Spice Girls", "Wannabe");
+
+    }
+
+    public Iterator<Song> iterator(){
         return new SongsIterator(this.songs);
     }
 }
+```
 
-// Array song list iterator
+Now the we define the concrete `Iterator` objects that whose job will be to faciliate the necessary functionality while encapsulating the iteration of their corresponding `Iterable` objects.
+
+```java
+/**
+ * A class for an Iterator for a list of songs implemented using an array.
+ */
 public class YourSongsIterator implements Iterator<Song> {
 
-	private Song[] songs;
-	private int indexKey;
-	
-	public YourSongsIterator(Song[] s) {
-		this.songs = s;
-		this.indexKey = 0;
-	}
+    private Song[] songs;
+    private int indexKey;
 
-	@Override
-	public boolean hasNext(){
-        return (this.indexKey + 1) < this.songs.length;
+    /**
+     * Takes in an array of songs and creates an iterator object for it.
+     *
+     * @param s Array of songs to iterate upon.
+     */
+    public YourSongsIterator(Song[] s) {
+        this.songs = s;
+        this.indexKey = 0;
     }
 
-	@Override
-	public Song next(){
-        if (this.hasNext()){ 
-            return this.songs[this.indexKey++]; 
+    /**
+     * Informs the user if the end of the songs list has been reached.
+     *
+     * @return True iff the iterator has not reached the end of the list.
+     */
+    @Override
+    public boolean hasNext(){
+        return this.indexKey < this.songs.length;
+    }
+
+    /**
+     * Returns the next song in the list, if there is one.  If the end of the list has been reached, returns null.
+     *
+     * @return Next song on the list if not at the end.  Else returns null.
+     */
+    @Override
+    public Song next(){
+        if (this.hasNext()){
+            return this.songs[this.indexKey++];
         }
-		return null;
+        return null;
     }
 }
+```
 
-// HashMap implementation of song list
-public class MySongs implements Iterable<Song> {
-
-	 HashMap<Integer, Song> mySongs;
-	 
-	 public MySongs() {
-		 mySongs = new HashMap<Integer, Song>();
-		 
-		 mySongs.put(0, new Song("Green Day", "American Idiot"));
-		 mySongs.put(1, new Song("AC/DC", "Highway to Hell"));
-		 mySongs.put(2, new Song("Bon Jovi", "Livin' On a Prayer"));
-	 }
-
-	@Override
-	public Iterator<Song> iterator() {
-		return new MySongsIterator(mySongs);
-	}
-}
-
-// HashMap song list iterator
+```java
+/**
+ * A class for an Iterator for a list of songs implemented using a hashmap.
+ */
 public class MySongsIterator implements Iterator<Song> {
 
-	private HashMap<Integer, Song> songs;
-	private int indexKey;
-	
-	public MySongsIterator(HashMap<Integer, Song> s) {
-		this.songs = s;
-		indexKey = 0;
-	}
-	
-	@Override
-	public boolean hasNext() {
-		return this.indexKey < this.songs.size();
-	}
+    private HashMap<Integer, Song> songs;
+    private int indexKey;
 
-	@Override
-	public Song next() {
-		return this.songs.get(indexKey++);
-	}
+    public MySongsIterator(HashMap<Integer, Song> s) {
+        this.songs = s;
+        indexKey = 0;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return this.indexKey < this.songs.size();
+    }
+
+    @Override
+    public Song next() {
+        return this.songs.get(indexKey++);
+    }
 
 }
+```
+
+Now notice that even though the lists have different implementation, we can work with their iterators in the exact same way:
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+
+        // The two playlists with different implementations
+        MySongs myList =  new MySongs();
+        YourSongs yourList = new YourSongs();
+
+        // Get the two iterators for the lists
+        Iterator<Song> i1 = myList.iterator();
+        Iterator<Song> i2 = yourList.iterator();
+
+        // Traverse the two lists at the same time using the same interface
+        while(i1.hasNext() && i2.hasNext()){
+            Song song1 = i1.next();
+            Song song2 = i2.next();
+            System.out.println("My next song is: " + song1.name + " by " + song1.artist);
+            System.out.println("Your next song is: " + song2.name + " by " + song2.artist + "\n");
+        }
+    }
+}
+```
+
+```
+My next song is: American Idiot by Green Day
+Your next song is: Hit Me Baby One More Time by Britney Spears
+
+My next song is: Highway to Hell by AC/DC
+Your next song is: Barbie Girl by Aqua
+
+My next song is: Livin' On a Prayer by Bon Jovi
+Your next song is: Wannabe by Spice Girls
 ```
