@@ -1,5 +1,8 @@
 package command;
 
+/**
+ * A class for a house alarm.  A house alarm can be armed or disarmed.
+ */
 public class Alarm {
 
     public void arm(){

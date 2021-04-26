@@ -1,5 +1,8 @@
 package command;
 
+/**
+ * A class for a Command object that turns a light on.  A LightOnCommand has a Light object that it turns on.
+ */
 public class LightOnCommand implements Command{
 
     private Light light;

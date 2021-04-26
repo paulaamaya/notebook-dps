@@ -1,5 +1,8 @@
 package command;
 
+/**
+ * A class for a garage door.  The garage door can go up or down.
+ */
 public class GarageDoor {
 
     public void up(){

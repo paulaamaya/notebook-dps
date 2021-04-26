@@ -1,5 +1,8 @@
 package command;
 
+/**
+ * A class for a light in a house.  A light has a location where it is placed and can be turned on or off.
+ */
 public class Light {
 
     String location;

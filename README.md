@@ -287,7 +287,7 @@ By dynamically composing objects, you can add new functionality by writing new "
 
 ## Example: Christmas Tree
 
-First we define a common interface for the concrete component, and the decorator classes.
+First we define a common interface for both the concrete components and decorators to implement:
 
 ```java
 public interface ChristmasTree {
@@ -299,41 +299,58 @@ public interface ChristmasTree {
 Now we define the base classes, i.e. the **basic component class** and the **abstract decorator class** for all the decorators that we will implement.
 
 ```java
-// Concrete component class
+/**
+ * A class for a basic pine christmas tree.
+ */
 public class PineChristmasTree implements ChristmasTree{
 
-    @Override
-    public String decorate(){
-        return "Pine christmas tree";
-    }
+  @Override
+  public String decorate(){
+    return "Pine christmas tree";
+  }
 }
 
-// Decorator abstract class
+/**
+ * An abstract class for a tree Decorator requiring that all subclasses implement the 
+ * ChristmasTree interface.  A Decorator has a reference to a ChristmasTree object, 
+ * which it wraps.
+ */
 public abstract class Decorator implements ChristmasTree{
 
-    public ChristmasTree wrappee;
-    
-    public Decorator(ChristmasTree wrappee){
-        this.wrappee = wrappee;
-    }
+  public ChristmasTree wrappee;
+
+  /**
+   * Creates a Decorator object that wraps a given ChristmasTree object.
+   *
+   * @param wrappee The ChristmasTree to be decorated.
+   */
+  public Decorator(ChristmasTree wrappee){
+    this.wrappee = wrappee;
+  }
 }
 ```
 
 Now we implement the **concrete decorator classes** which inherit from the abstract `Decorator` class.  They keep a reference to the object they are wrapping so that they can chain method calls down to the basic component class, this component is passed to their constructor.
 
 ```java
+/**
+ * A class for a christmas tree decorator that adds lights to the tree it wraps.
+ */
 public class TreeLights extends Decorator{
 
-    public TreeLights(ChristmasTree wrappee) {
-        super(wrappee);
-    }
+  public TreeLights(ChristmasTree wrappee) {
+    super(wrappee);
+  }
 
-    @Override
-    public String decorate() {
-        return this.wrappee.decorate() + " with lights";
-    }
+  @Override
+  public String decorate() {
+    return this.wrappee.decorate() + " with lights";
+  }
 }
 
+/**
+ * A class for a christmas tree decorator that adds a topper to the tree it wraps.
+ */
 public class TreeTopper extends Decorator{
 
     public TreeTopper(ChristmasTree wrappee){
@@ -523,48 +540,56 @@ Ensures a class has only one instance of an object and provides a global point o
 
 ## Example: Chocolate Boiler
 
+The trick with Singleton is to block external creation of the class:
+- Declare a private constructor so that only the class can create an instance of itself.
+- Declare a `getInstance()` method as the only point of access.  Whether the unique instance
+  exists or not, this is the only way another class can access it.
+- Keep a reference to the unique instance in a private class variable.
+
 ```java
-/** Assume we have a factory with a single chocolate boiler. 
-
-* We're going to write a program that controls it so that bad things don't happen.
-* (e.g. the program creates two boiler instances and fills up an full boiler -> overflow!)
-**/
-
+/**
+ * A class for a chocolate boiler in a factory with a single boiler.
+ *
+ * If more than one boiler is instantiated in a program, bad things can happen.  (e.g. the
+ * program creates two boiler instances and fills up an full boiler -> overflow!)
+ */
 public class ChocolateBoiler {
-    
-    private boolean isEmpty;
-    private boolean isBoiled;
-    private static uniqueInstance;
 
-    /**
-    * Private constructor so only the class can call create
-    * an instance of itself.
-    **/
-    private ChocolateBoiler(){
-        this.isEmpty = false;
-        this.isBoiled = false;
+  private boolean isEmpty;
+  private boolean isBoiled;
+  private static ChocolateBoiler uniqueInstance;
+
+  /**
+   * Private constructor that creates an empty, non-boiled chocolate boiler.
+   */
+  private ChocolateBoiler(){
+    this.isEmpty = false;
+    this.isBoiled = false;
+  }
+
+  /**
+   * A method for accessing the chocolate boiler.  If no boiler has been instantiated, the
+   * private constructor is called to create a new one first, then the boiler is returned.
+   * Else it just returns the unique boiler.
+   *
+   * @return the unique instance of the class, i.e. ChocolateBoiler.uniqueInstance
+   */
+  public static ChocolateBoiler getInstance(){
+    if(uniqueInstance == null){
+      uniqueInstance = new ChocolateBoiler();
     }
+    return uniqueInstance;
+  }
 
-    /**
-    * This method is the global point of access.  Whether the instance
-    * exists or not, this is the only way another class can access it.
-    **/
-    public static ChocolateBoiler getInstance(){
-        if(uniqueInstance == null){
-            uniqueInstance = new ChocolateBoiler();
-        }
-        return uniqueInstance;
-    }
-
-    // Other useful methods...
+  // Other useful methods...
 }
 ```
 
 # Command Pattern
 
-Encapsulates a request as an object, thereby letting you parametrize other objects with different requests,  queue or log requests and support undoable operations.  It decouples the requester of an action from the object that actually performs the action.
+This pattern encapsulates requests as objects, thereby letting you parametrize other objects with different requests,  queue or log requests and support undoable operations.  It decouples the requester of an action from the object that actually performs the action.
 
-In this way the same object can be parametrized in multiple ways with all sort of commands as long as they implement the Command interface!
+In this way the same object can be parametrized in multiple ways with all sort of commands as long as they implement the `Command` interface!
 
 ![Command UML](docs/command-uml.png)
 
@@ -574,16 +599,26 @@ A command object encapsulates a request by binding together a set of actions on 
 > 
 >A **null object** is useful when you don’t have a meaningful object to return, and yet you want to remove the responsibility for handling a `null` from the client.  It is common to use a `NoCommand` null object for unassigned invokers. (See the Remote Control constructor below).
 
-In general, we strive for “dumb” command objects that just invoke an action on the receiver so we can maintain the same level of decoupling between the invoker and the receiver.
+In general, we strive for “dumb” command objects that just invoke an action on the receiver, so we can maintain the same level of decoupling between the invoker and the receiver.
 
 ## Example: Global Remote Control
 
-```java 
-// INVOKER
+We begin with the **`Invoker`** class which will be completely decoupled from the actual receiver classes.  It will simply interact with the messenger `Command` interface.
+
+```java
+package command;
+
+/**
+ * A class for a home remote control that stores four commands.
+ */
 public class RemoteControl {
 
     public Command[] onCommands;
 
+    /**
+     * Creates a new remote control with noCommand objects in each button. Thus, the execute() method 
+     * can be called on all buttons, even if they haven't been assigned a command that does something useful
+     */
     public RemoteControl(){
         this.onCommands = new Command[4];
 
@@ -593,26 +628,41 @@ public class RemoteControl {
         }
     }
 
+    /**
+     * Sets a given Command object into a given slot number.
+     *
+     * @param slot Button number to be programmed.
+     * @param onCommand Command to be carried out by the given button.
+     */
     public void setCommand(int slot, Command onCommand){
         if (slot < 4 && slot >= 0){
             this.onCommands[slot] = onCommand;
         }
     }
 
-    
+    /**
+     * Executes the Command that has been set for the given button number by calling the Command's execute() method.
+     * If the button has not been assigned a significant command, the method is called on a NoCommand object which does
+     * nothing meaningful, but application doesn't break.
+     *
+     * @param slot Button whose assigned command is to be carried out.
+     */
     public void buttonPushed(int slot){
         if (slot < 4 && slot >= 0){
             this.onCommands[slot].execute();
         }
     }
 }
+```
 
-// RECEIVERS  + COMMANDS
-public interface Command { 
-    public void execute();
-}
+Here is where the beauty of command is really highlighted.  Below we have some classes for receivers that we would like to program into our global remote control.  Each class has very different implementations, functionalities, and method names.
 
-// Receiver I
+Notice that if we wanted to do this the naive way, we would have to alter the `RemoteControl` code eveytime we wanted to add a new receivers so as to accomodate to its APIs.
+
+```java
+/**
+ * A class for a house alarm.  A house alarm can be armed or disarmed.
+ */
 public class Alarm {
 
     public void arm(){
@@ -623,47 +673,36 @@ public class Alarm {
         System.out.println("Alarm is disarmed.");
     }
 }
-// Command I
-public class AlarmArmCommand implements Command{
+```
 
-    private Alarm alarm;
-
-    public AlarmArmCommand(Alarm alarm){
-        this.alarm = alarm;}
-
-    @Override
-    public void execute() {this.alarm.arm();}
-}
-
-// Receiver II
+```java
+/**
+ * A class for a garage door.  The garage door can go up or down.
+ */
 public class GarageDoor {
 
     public void up(){
-        System.out.println("Garage door is up.");}
+        System.out.println("Garage door is up.");
+    }
 
     public void down(){
         System.out.println("Garage door is down.");
     }
 }
-// Command II
-public class GarageOpenCommand implements Command {
+```
 
-    private GarageDoor door;
-
-    public GarageOpenCommand(GarageDoor door){
-        this.door = door;}
-
-    @Override
-    public void execute() {this.door.up();
-    }
-
-// Receiver III
+```java
+/**
+ * A class for a light in a house.  A light has a location where it is placed and can be turned on or off.
+ */
 public class Light {
 
     String location;
 
     public Light(String location){
-        this.location = location;}
+        this.location = location;
+    }
+
     public void on(){
         System.out.println("The light in the " + this.location + " is on.");
     }
@@ -672,7 +711,68 @@ public class Light {
         System.out.println("The light in the " + this.location + " is on.");
     }
 }
-// Command III
+```
+
+Here is where this design pattern steps in.  Instead of all that hard coding into to remote control, we define a `Command` interface that simply imposes an `execute()` method.  **Each concrete implementation of `Command` objects will worry about the messy details of what "executing" means**.
+
+```java
+public interface Command { 
+  public void execute();
+  }
+```
+
+```java
+/**
+ * A class for a Command object that arms an alarm.  An AlarmArmCommand has an Alarm object that it arms.
+ */
+public class AlarmArmCommand implements Command{
+
+    private Alarm alarm;
+
+    /**
+     * Creates a Command that can arm the given Alarm object if called upon to do so.
+     *
+     * @param alarm Alarm to arm if called to do so.
+     */
+    public AlarmArmCommand(Alarm alarm){
+        this.alarm = alarm;
+    }
+
+    /**
+     * Calls the Alarm's arm() method.
+     */
+    @Override
+    public void execute() {
+        this.alarm.arm();
+    }
+
+}
+```
+
+```java
+/**
+ * A class for a Command object that opens a GarageDoor.  A GarageOpenCommand has a GarageDoor object that it opens.
+ */
+public class GarageOpenCommand implements Command {
+
+    private GarageDoor door;
+
+    public GarageOpenCommand(GarageDoor door){
+        this.door = door;
+    }
+
+    @Override
+    public void execute() {
+        this.door.up();
+    }
+
+}
+```
+
+```java
+/**
+ * A class for a Command object that turns a light on.  A LightOnCommand has a Light object that it turns on.
+ */
 public class LightOnCommand implements Command{
 
     private Light light;
@@ -682,36 +782,46 @@ public class LightOnCommand implements Command{
     }
 
     @Override
-    public void execute() {this.light.on();}
+    public void execute() {
+        this.light.on();
+    }
 }
+```
 
-// NOCOMMAND + MACROCOMMAND
-public class NoCommand implements Command{
+Finally, we can define a `MacroCommand` object that is basically a compound of `Command`s and bundles a set of actions into a single `execute()` method.  This gives us the opportunity of having a button that performs numerous actions at once in our remote control!
 
-    @Override
-    public void execute() { }
-}
-
+```java
+/**
+ * A class for a Command that performs a series of given Commands when called upon to do so.
+ */
 public class MacroCommand implements Command{
 
     Command[] commands;
 
+    /**
+     * Creates a new command object that will carry out all the given Commands.
+     *
+     * @param commands An array of Command objects that make up the macro command.
+     */
     public MacroCommand(Command[] commands){
         this.commands = commands;
     }
 
+    /**
+     * Executes all the Commands that were given to this MacroCommand when instantiated.
+     */
     @Override
     public void execute() {
         for(int i = 0; i < this.commands.length; i++){
             this.commands[i].execute();
         }
     }
+}
 ```
 
-Now notice how the client sets the entire mechanism in motion:
+Now notice how the client sets the entire mechanism in motion by passing command objects to the invoker.  These commands incapsulate the actions from the user.  Also, the invoker is completely unaware of the receivers that have been programmed and how they work.
 
 ```java
-// CLIENT
 public class Client {
 
     public static void main(String[] args) {
