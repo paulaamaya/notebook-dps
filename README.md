@@ -2,7 +2,7 @@
 - [Strategy Pattern](#strategy-pattern)
   - [Example: Travelling](#example-travelling)
 - [Observer Pattern](#observer-pattern)
-  - [Example: Auctioneer and Bidders](#example-auction)
+  - [Example: Auction](#example-auction)
 - [Decorator Pattern](#decorator-pattern)
   - [Example: Christmas Tree](#example-christmas-tree)
 - [Factory Pattern](#factory-pattern)
@@ -12,8 +12,9 @@
 - [Command Pattern](#command-pattern)
   - [Example: Global Remote Control](#example-global-remote-control)
 - [Adapter Pattern](#adapter-pattern)
+  - [Example: Turkey Adapters](#example-turkey-adapters)
 - [Facade Pattern](#facade-pattern)
-- [Template Method](#template-method)
+- [Template Pattern](#template-pattern)
 - [Iterator Pattern](#iterator-pattern)
   - [Example: Song Iterator](#example-song-iterator)
 
@@ -865,6 +866,48 @@ The light in the front porch is on.
 ```
 
 # Adapter Pattern
+
+Converts the interface of a class into another interface the client expects.  Adapter lets classes work together that otherwise couldn't, without changing the code in either one of them.
+
+![Adapter UML](docs/adapter-uml.png)
+
+In decorator, we wrapped classes in decorators to give them new responsibilities.  With adapter, we wrap classes in an adapter to make them look like something they're not.
+
+## Example: Turkey Adapters
+
+Suppose you have a program with some ducks.  You're short on `Duck` objects and you'd like to use some `Turkey` objects in their place.  You can't just cast a Turkey as a Duck nor can you alter the vendor's code for the Turkey class. So **we'll write an adapter class that wraps a `Turkey` and translates its implementation in a way that is compatible with the `Duck` interface**.
+
+For now here is the `Duck` interface and one of its concrete implementations:
+
+```java
+public interface Duck {
+    public void quack();
+    public void fly();
+}
+```
+
+```java
+/**
+ * A class for a mallard duck that implements the Duck interface.  A duck quacks and flies.
+ */
+public class MallardDuck implements Duck{
+
+    @Override
+    public void quack() {
+        System.out.println("Quack!");
+    }
+
+    @Override
+    public void fly() {
+        System.out.println("I'm flying, soaring...");
+    }
+}
+```
+
+Below is the `Turkey` interface and a concrete implementation that we got from the vendor.  Notice that tukeys don't quack, but gobble.  They also can't fly very long distances at once.
+
+
+
 
 # Facade Pattern
 
