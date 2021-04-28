@@ -1,30 +1,499 @@
 
-- [Strategy Pattern](#strategy-pattern)
-  - [Example: Travelling](#example-travelling)
-- [Observer Pattern](#observer-pattern)
-  - [Example: Auction](#example-auction)
-- [Decorator Pattern](#decorator-pattern)
-  - [Example: Christmas Tree](#example-christmas-tree)
-- [Factory Pattern](#factory-pattern)
-  - [Example: Pizza Stores](#example-pizza-stores)
-- [Singleton Pattern](#singleton-pattern)
-  - [Example: Chocolate Boiler](#example-chocolate-boiler)
-- [Command Pattern](#command-pattern)
-  - [Example: Global Remote Control](#example-global-remote-control)
-- [Adapter Pattern](#adapter-pattern)
-  - [Example: Turkey Adapters](#example-turkey-adapters)
-- [Facade Pattern](#facade-pattern)
-- [Template Pattern](#template-pattern)
-- [Iterator Pattern](#iterator-pattern)
-  - [Example: Song Iterator](#example-song-iterator)
+- [Creational Patterns](#creational-patterns)
+  - [Singleton Pattern](#singleton-pattern)
+    - [Example: Chocolate Boiler](#example-chocolate-boiler)
+  - [Factory Pattern](#factory-pattern)
+    - [Example: Pizza Stores](#example-pizza-stores)
+  - [Builder Pattern](#builder-pattern)
+  - [Prototype Pattern](#prototype-pattern)
+- [Structural Patterns](#structural-patterns)
+  - [Decorator Pattern](#decorator-pattern)
+    - [Example: Christmas Tree](#example-christmas-tree)
+  - [Adapter Pattern](#adapter-pattern)
+    - [Example: Turkey Adapters](#example-turkey-adapters)
+  - [Facade Pattern](#facade-pattern)
+  - [Composite Pattern](#composite-pattern)
+  - [Proxy Pattern](#proxy-pattern)
+- [Behavioural Patterns](#behavioural-patterns)
+  - [Strategy Pattern](#strategy-pattern)
+    - [Example: Travelling](#example-travelling)
+  - [Observer Pattern](#observer-pattern)
+    - [Example: Auction](#example-auction)
+  - [Command Pattern](#command-pattern)
+    - [Example: Global Remote Control](#example-global-remote-control)
+  - [Template Pattern](#template-pattern)
+  - [Iterator Pattern](#iterator-pattern)
+    - [Example: Song Iterator](#example-song-iterator)
+  - [State Pattern](#state-pattern)
+  - [Visitor Pattern](#visitor-pattern)
 
-# Strategy Pattern
+# Creational Patterns
+
+## Singleton Pattern
+
+Ensures a class has only one instance of an object and provides a global point of access. We are letting the class manage a single instance of itself.
+
+![Singleton UML](docs/singleton-uml.png)
+
+### Example: Chocolate Boiler
+
+The trick with Singleton is to block external creation of the class:
+- Declare a private constructor so that only the class can create an instance of itself.
+- Declare a `getInstance()` method as the only point of access.  Whether the unique instance
+  exists or not, this is the only way another class can access it.
+- Keep a reference to the unique instance in a private class variable.
+
+```java
+/**
+ * A class for a chocolate boiler in a factory with a single boiler.
+ *
+ * If more than one boiler is instantiated in a program, bad things can happen.  (e.g. the
+ * program creates two boiler instances and fills up an full boiler -> overflow!)
+ */
+public class ChocolateBoiler {
+
+  private boolean isEmpty;
+  private boolean isBoiled;
+  private static ChocolateBoiler uniqueInstance;
+
+  /**
+   * Private constructor that creates an empty, non-boiled chocolate boiler.
+   */
+  private ChocolateBoiler(){
+    this.isEmpty = false;
+    this.isBoiled = false;
+  }
+
+  /**
+   * A method for accessing the chocolate boiler.  If no boiler has been instantiated, the
+   * private constructor is called to create a new one first, then the boiler is returned.
+   * Else it just returns the unique boiler.
+   *
+   * @return the unique instance of the class, i.e. ChocolateBoiler.uniqueInstance
+   */
+  public static ChocolateBoiler getInstance(){
+    if(uniqueInstance == null){
+      uniqueInstance = new ChocolateBoiler();
+    }
+    return uniqueInstance;
+  }
+
+  // Other useful methods...
+}
+```
+
+## Factory Pattern
+
+Defines an abstract class for creating an object, but allows subclasses to decide what objects to instantiate.  It lets a class defer instantiation to subclasses.
+
+![Factory UML](docs/factory-uml.png)
+
+The Creator class gives you an interface with a method for creating objects, also known as the factory method.
+
+Any other methods implemented in the abstract Creator class are written to operate on products produced, except the factory method – the creator class is written without knowledge of the actual products that will be created.
+
+### Example: Pizza Stores
+
+We begin with the abstract `Product` class that all the concrete products will inherit from.  
+This abstract product class will provide some defaults while the concrete products will define the details  - this part is nothing fancy, just inheritance in its purest form.
+
+We can think of these `Product` classes as the tiny factories that the store call on to make their pizzas.
+
+```java
+// Abstract 'Product' class
+public class Pizza {
+
+  String crust;
+  String type;
+  ArrayList<String> ingredients;
+
+  public Pizza(String crust, String type, ArrayList<String> ingredients){
+    this.crust = crust;
+    this.type = type;
+    this.ingredients = ingredients;
+  }
+
+  public void prepare(){
+    String info = "Preparing a " + this.type + " pizza with " +
+            this.crust + " crust";
+
+    for(String ingredient : this.ingredients){
+      info += " and " + ingredient;
+    }
+
+    System.out.println(info);
+  }
+
+  public void bake(){
+    System.out.println("Baking pizza...");
+  }
+
+  public void box(){ System.out.println("Boxing pizza..."); }
+
+}
+
+// Concrete product classes
+public class NYPepperoniPizza extends Pizza {
+
+  public NYPepperoniPizza(){
+    super("thin", "pepperoni", new ArrayList<String>());
+    this.ingredients.add("cheese");
+    this.ingredients.add("pepperoni");
+    this.ingredients.add("oregano");
+  }
+}
+
+public class ChicagoPepperoniPizza extends Pizza{
+
+  public ChicagoPepperoniPizza(){
+    super("thick", "pepperoni", new ArrayList<String>());
+    this.ingredients.add("cheese");
+    this.ingredients.add("pepperoni");
+    this.ingredients.add("oil");
+  }
+}
+```
+
+Now we are going to define the `PizzaStore` classes which will encapsulate the creation of the pizzas through the factories we defined above.  We start off with a basic `PizzaStore` abstract class that defines the common methods amongst store franchises - such as the flow of preparing an order - and an abstract factory method.
+
+```java
+public abstract class PizzaStore {
+
+  public Pizza orderPizza(String type){
+    Pizza pizza = this.makePizza(type);
+
+    pizza.prepare();
+    pizza.bake();
+    pizza.box();
+
+    return pizza;
+  }
+
+  public abstract Pizza makePizza(String type);
+}
+```
+
+A cheese pizza in Chicago is different from a cheese Pizza in NYC.  However, it is the store in each city that worries about making the right one, not the client ordering the pizza!
+
+The concrete creators decide which concrete product class to instantiate.
+
+```java
+public class NYPizzaStore extends PizzaStore{
+
+    @Override
+    public Pizza factoryMethod(String type) {
+        return switch (type) {
+            case "pepperoni" -> new NYPepperoniPizza();
+            default -> new NYCheesePizza();
+        };
+    }
+}
+
+public class ChicagoPizzaStore extends PizzaStore {
+
+  @Override
+  public Pizza factoryMethod(String type) {
+    return switch (type) {
+      case "pepperoni" -> new ChicagoPepperoniPizza();
+      default -> new ChicagoCheesePizza();
+    };
+  }
+}
+```
+
+As it should, the client only deals with the stores and has no knowledge of the intricacies behind creating the right pizza.  The creation of the `Product` is completely encapsulated by the `Creator`.
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+        PizzaStore nyc = new NYPizzaStore();
+        PizzaStore chi = new ChicagoPizzaStore();
+
+        // Harvey's order
+        nyc.orderPizza("pepperoni");
+
+        //Jessica's order
+        chi.orderPizza("pepperoni");
+    }
+}
+```
+
+```
+Preparing a pepperoni pizza with thin crust and cheese and pepperoni and oregano
+Baking pizza...
+Boxing pizza...
+
+Preparing a pepperoni pizza with thick crust and cheese and pepperoni and oil
+Baking pizza...
+Boxing pizza...
+```
+
+## Builder Pattern
+
+## Prototype Pattern
+
+---
+
+# Structural Patterns
+
+## Decorator Pattern
+
+Attaches additional responsibilities to an object dynamically.  The decorator pattern involves a set of decorating classes that are used to wrap concrete components.  Decorators provide a flexible alternative to subclassing for extending functionality.
+
+By dynamically composing objects, you can add new functionality by writing new "decorating" code rather than changing existing code.
+
+![Decorator UML](docs/decorator-uml.png)
+
+### Example: Christmas Tree
+
+First we define a common interface for both the concrete components and decorators to implement:
+
+```java
+public interface ChristmasTree {
+
+    public String decorate();
+}
+```
+
+Now we define the base classes, i.e. the **basic component class** and the **abstract decorator class** for all the decorators that we will implement.
+
+```java
+/**
+ * A class for a basic pine christmas tree.
+ */
+public class PineChristmasTree implements ChristmasTree{
+
+  @Override
+  public String decorate(){
+    return "Pine christmas tree";
+  }
+}
+
+/**
+ * An abstract class for a tree Decorator requiring that all subclasses implement the 
+ * ChristmasTree interface.  A Decorator has a reference to a ChristmasTree object, 
+ * which it wraps.
+ */
+public abstract class Decorator implements ChristmasTree{
+
+  public ChristmasTree wrappee;
+
+  /**
+   * Creates a Decorator object that wraps a given ChristmasTree object.
+   *
+   * @param wrappee The ChristmasTree to be decorated.
+   */
+  public Decorator(ChristmasTree wrappee){
+    this.wrappee = wrappee;
+  }
+}
+```
+
+Now we implement the **concrete decorator classes** which inherit from the abstract `Decorator` class.  They keep a reference to the object they are wrapping so that they can chain method calls down to the basic component class, this component is passed to their constructor.
+
+```java
+/**
+ * A class for a christmas tree decorator that adds lights to the tree it wraps.
+ */
+public class TreeLights extends Decorator{
+
+  public TreeLights(ChristmasTree wrappee) {
+    super(wrappee);
+  }
+
+  @Override
+  public String decorate() {
+    return this.wrappee.decorate() + " with lights";
+  }
+}
+
+/**
+ * A class for a christmas tree decorator that adds a topper to the tree it wraps.
+ */
+public class TreeTopper extends Decorator{
+
+    public TreeTopper(ChristmasTree wrappee){
+        super(wrappee);
+    }
+
+    @Override
+    public String decorate(){
+        return this.wrappee.decorate() + " with tree topper";
+    }
+}
+```
+
+Decorators are meant to add behaviour to the object they wrap.  So the basic component class gets additional behaviour added to it, not by adding more code into it, but by having the client wrap it in decorators expanding its behaviour.
+
+```java
+// Client wraps concrete components with decorator classes
+public class TreeClient {
+
+  public static void main(String[] args) {
+    ChristmasTree myTree = new TreeTopper(new TreeLights(new PineChristmasTree()));
+    ChristmasTree yourTree = new TreeTopper(new PineChristmasTree());
+
+    System.out.println("Let's decorate my tree: " + myTree.decorate());
+    System.out.println("Let's decorate your tree: " + yourTree.decorate());
+  }
+}
+```
+
+```
+Let's decorate my tree: Pine christmas tree with lights with tree topper
+Let's decorate your tree: Pine christmas tree with tree topper
+```
+
+## Adapter Pattern
+
+Converts the interface of a class into another interface the client expects.  Adapter lets classes work together that otherwise couldn't, without changing the code in either one of them.
+
+![Adapter UML](docs/adapter-uml.png)
+
+In decorator, we wrapped classes in decorators to give them new responsibilities.  With adapter, we wrap classes in an adapter to make them look like something they're not.
+
+### Example: Turkey Adapters
+
+Suppose you have a program with some ducks.  You're short on `Duck` objects and you'd like to use some `Turkey` objects in their place.  You can't just cast a Turkey as a Duck nor can you alter the vendor's code for the Turkey class. So **we'll write an adapter class that wraps a `Turkey` and translates its implementation in a way that is compatible with the `Duck` interface**.
+
+For now here is the `Duck` interface and one of its concrete implementations:
+
+```java
+public interface Duck {
+    public void quack();
+    public void fly();
+}
+```
+
+```java
+/**
+ * A class for a mallard duck that implements the Duck interface.  A duck quacks and flies.
+ */
+public class MallardDuck implements Duck{
+
+    @Override
+    public void quack() {
+        System.out.println("Quack!");
+    }
+
+    @Override
+    public void fly() {
+        System.out.println("I'm flying, soaring...");
+    }
+}
+```
+
+Below is the `Turkey` interface and a concrete implementation that we got from the vendor.  Notice that tukeys don't quack, but gobble.  They also can't fly very long distances at once.
+
+```java
+public interface Turkey {
+    public void gobble();
+    public void fly();
+}
+```
+
+```java
+public class WildTurkey implements Turkey{
+
+    @Override
+    public void gobble() {
+        System.out.println("Gobble, gobble!!");
+    }
+
+    @Override
+    public void fly() {
+        System.out.println("I'm flying for 100 metres...");
+    }
+}
+```
+
+Now we are going to create an `Adapter` class that implements the `Duck` class by taking in a `Turkey` object and implements the required duck methods in terms of turkey methods. This approach of wrapping the adaptee with an altered interface has the added advantage that we can use the adapter with any subclass of the adaptee.
+
+```java
+/**
+ * A class for an adapter from the Turkey interface to the Duck interface.
+ */
+public class TurkeyAdapter implements Duck{
+
+    private Turkey turkey;
+
+    /**
+     * Creates a new TurkeyAdapter that takes in a Turkey and adapts it to have Duck behaviour.
+     * @param turkey Turkey object to be wrapped in the adapter.
+     */
+    public TurkeyAdapter(Turkey turkey){
+        this.turkey = turkey;
+    }
+
+    // The quack translation is to call the turkey's gobble method.
+    @Override
+    public void quack() {
+        this.turkey.gobble();
+    }
+
+    // Turkeys fly in short spurts.  To map between a Duck's fly() and a Turkey's we must call the
+    // the turkey's method fly() five times to make up for it and fly an equivalent distance.
+    @Override
+    public void fly() {
+        for(int i = 0; i < 5; i++ ){
+            this.turkey.fly();
+        }
+    }
+}
+```
+
+Now notice how the client can freely work with the `Duck` inteface it expects:
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+
+        // Create a Duck object
+        Duck realDuck = new MallardDuck();
+
+        // Create a Turkey object wrapped in an adapter
+        Duck fakeDuck = new TurkeyAdapter(new WildTurkey());
+
+        // Notice how the client can freely work with the Duck interface it expects
+        realDuck.quack();
+        fakeDuck.quack();
+
+        realDuck.fly();
+        fakeDuck.fly();
+    }
+}
+```
+
+```
+Quack!
+Gobble, gobble!!
+I'm flying for 500 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres... 
+```
+
+## Facade Pattern
+
+## Composite Pattern
+
+## Proxy Pattern
+
+---
+
+# Behavioural Patterns
+
+## Strategy Pattern
 
 Defines a family of algorithms, encapsulates each one, and makes them interchangeable.  Strategy enables the client to select the algorithm at runtime; the algorithm varies independently of the clients that use it.
 
 ![Strategy UML](docs/strategy-uml.png)
 
-## Example: Travelling
+### Example: Travelling
 
 Here we will implement a simple program that takes a person to a given location through different strategies - the person can travel by car or bus.  The Client only interacts with the context as follows:
 
@@ -128,7 +597,7 @@ public class BusStrategy implements TravelStrategy{
 }
 ```
 
-# Observer Pattern
+## Observer Pattern
 Defines a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
 
 ![Observer UML](docs/observer-uml.png)
@@ -137,7 +606,7 @@ Defines a one-to-many dependency between objects so that when one object changes
 
 **Push Communication Method**: The Observable just sends all information to the observers; the observers decide what to use.
 
-## Example: Auction
+### Example: Auction
 
 This design pattern can be modelled as an auction (Client) with an auctioneer (Observable) and bidders (Observers) getting information about the status of the transaction from the auctioneer.
 
@@ -277,316 +746,8 @@ The highest bid is now 70 with ID: 2
 The highest bid is now 100 with ID: 3
 The highest bid is now 100 with ID: 3
 ```
-  
-# Decorator Pattern
 
-Attaches additional responsibilities to an object dynamically.  The decorator pattern involves a set of decorating classes that are used to wrap concrete components.  Decorators provide a flexible alternative to subclassing for extending functionality.
-
-By dynamically composing objects, you can add new functionality by writing new "decorating" code rather than changing existing code.
-
-![Decorator UML](docs/decorator-uml.png)
-
-## Example: Christmas Tree
-
-First we define a common interface for both the concrete components and decorators to implement:
-
-```java
-public interface ChristmasTree {
-
-    public String decorate();
-}
-```
-
-Now we define the base classes, i.e. the **basic component class** and the **abstract decorator class** for all the decorators that we will implement.
-
-```java
-/**
- * A class for a basic pine christmas tree.
- */
-public class PineChristmasTree implements ChristmasTree{
-
-  @Override
-  public String decorate(){
-    return "Pine christmas tree";
-  }
-}
-
-/**
- * An abstract class for a tree Decorator requiring that all subclasses implement the 
- * ChristmasTree interface.  A Decorator has a reference to a ChristmasTree object, 
- * which it wraps.
- */
-public abstract class Decorator implements ChristmasTree{
-
-  public ChristmasTree wrappee;
-
-  /**
-   * Creates a Decorator object that wraps a given ChristmasTree object.
-   *
-   * @param wrappee The ChristmasTree to be decorated.
-   */
-  public Decorator(ChristmasTree wrappee){
-    this.wrappee = wrappee;
-  }
-}
-```
-
-Now we implement the **concrete decorator classes** which inherit from the abstract `Decorator` class.  They keep a reference to the object they are wrapping so that they can chain method calls down to the basic component class, this component is passed to their constructor.
-
-```java
-/**
- * A class for a christmas tree decorator that adds lights to the tree it wraps.
- */
-public class TreeLights extends Decorator{
-
-  public TreeLights(ChristmasTree wrappee) {
-    super(wrappee);
-  }
-
-  @Override
-  public String decorate() {
-    return this.wrappee.decorate() + " with lights";
-  }
-}
-
-/**
- * A class for a christmas tree decorator that adds a topper to the tree it wraps.
- */
-public class TreeTopper extends Decorator{
-
-    public TreeTopper(ChristmasTree wrappee){
-        super(wrappee);
-    }
-
-    @Override
-    public String decorate(){
-        return this.wrappee.decorate() + " with tree topper";
-    }
-}
-```
-
-Decorators are meant to add behaviour to the object they wrap.  So the basic component class gets additional behaviour added to it, not by adding more code into it, but by having the client wrap it in decorators expanding its behaviour.
-
-```java
-// Client wraps concrete components with decorator classes
-public class TreeClient {
-
-  public static void main(String[] args) {
-    ChristmasTree myTree = new TreeTopper(new TreeLights(new PineChristmasTree()));
-    ChristmasTree yourTree = new TreeTopper(new PineChristmasTree());
-
-    System.out.println("Let's decorate my tree: " + myTree.decorate());
-    System.out.println("Let's decorate your tree: " + yourTree.decorate());
-  }
-}
-```
-
-```
-Let's decorate my tree: Pine christmas tree with lights with tree topper
-Let's decorate your tree: Pine christmas tree with tree topper
-```
-
-# Factory Pattern
-
-Defines an abstract class for creating an object, but allows subclasses to decide what objects to instantiate.  It lets a class defer instantiation to subclasses.
-
-![Factory UML](docs/factory-uml.png)
-
-The Creator class gives you an interface with a method for creating objects, also known as the factory method.
-
-Any other methods implemented in the abstract Creator class are written to operate on products produced, except the factory method – the creator class is written without knowledge of the actual products that will be created.
-
-## Example: Pizza Stores
-
-We begin with the abstract `Product` class that all the concrete products will inherit from.  
-This abstract product class will provide some defaults while the concrete products will define the details  - this part is nothing fancy, just inheritance in its purest form.
-
-We can think of these `Product` classes as the tiny factories that the store call on to make their pizzas.
-
-```java
-// Abstract 'Product' class
-public class Pizza {
-
-  String crust;
-  String type;
-  ArrayList<String> ingredients;
-
-  public Pizza(String crust, String type, ArrayList<String> ingredients){
-    this.crust = crust;
-    this.type = type;
-    this.ingredients = ingredients;
-  }
-
-  public void prepare(){
-    String info = "Preparing a " + this.type + " pizza with " +
-            this.crust + " crust";
-
-    for(String ingredient : this.ingredients){
-      info += " and " + ingredient;
-    }
-
-    System.out.println(info);
-  }
-
-  public void bake(){
-    System.out.println("Baking pizza...");
-  }
-
-  public void box(){ System.out.println("Boxing pizza..."); }
-
-}
-
-// Concrete product classes
-public class NYPepperoniPizza extends Pizza {
-
-  public NYPepperoniPizza(){
-    super("thin", "pepperoni", new ArrayList<String>());
-    this.ingredients.add("cheese");
-    this.ingredients.add("pepperoni");
-    this.ingredients.add("oregano");
-  }
-}
-
-public class ChicagoPepperoniPizza extends Pizza{
-
-  public ChicagoPepperoniPizza(){
-    super("thick", "pepperoni", new ArrayList<String>());
-    this.ingredients.add("cheese");
-    this.ingredients.add("pepperoni");
-    this.ingredients.add("oil");
-  }
-}
-```
-
-Now we are going to define the `PizzaStore` classes which will encapsulate the creation of the pizzas through the factories we defined above.  We start off with a basic `PizzaStore` abstract class that defines the common methods amongst store franchises - such as the flow of preparing an order - and an abstract factory method.
-
-```java
-public abstract class PizzaStore {
-
-  public Pizza orderPizza(String type){
-    Pizza pizza = this.makePizza(type);
-
-    pizza.prepare();
-    pizza.bake();
-    pizza.box();
-
-    return pizza;
-  }
-
-  public abstract Pizza makePizza(String type);
-}
-```
-
-A cheese pizza in Chicago is different from a cheese Pizza in NYC.  However, it is the store in each city that worries about making the right one, not the client ordering the pizza!
-
-The concrete creators decide which concrete product class to instantiate.
-
-```java
-public class NYPizzaStore extends PizzaStore{
-
-    @Override
-    public Pizza factoryMethod(String type) {
-        return switch (type) {
-            case "pepperoni" -> new NYPepperoniPizza();
-            default -> new NYCheesePizza();
-        };
-    }
-}
-
-public class ChicagoPizzaStore extends PizzaStore {
-
-  @Override
-  public Pizza factoryMethod(String type) {
-    return switch (type) {
-      case "pepperoni" -> new ChicagoPepperoniPizza();
-      default -> new ChicagoCheesePizza();
-    };
-  }
-}
-```
-
-As it should, the client only deals with the stores and has no knowledge of the intricacies behind creating the right pizza.  The creation of the `Product` is completely encapsulated by the `Creator`.
-
-```java
-public class Client {
-
-    public static void main(String[] args) {
-        PizzaStore nyc = new NYPizzaStore();
-        PizzaStore chi = new ChicagoPizzaStore();
-
-        // Harvey's order
-        nyc.orderPizza("pepperoni");
-
-        //Jessica's order
-        chi.orderPizza("pepperoni");
-    }
-}
-```
-
-```
-Preparing a pepperoni pizza with thin crust and cheese and pepperoni and oregano
-Baking pizza...
-Boxing pizza...
-
-Preparing a pepperoni pizza with thick crust and cheese and pepperoni and oil
-Baking pizza...
-Boxing pizza...
-```
-
-# Singleton Pattern
-
-Ensures a class has only one instance of an object and provides a global point of access. We are letting the class manage a single instance of itself.
-
-![Singleton UML](docs/singleton-uml.png)
-
-## Example: Chocolate Boiler
-
-The trick with Singleton is to block external creation of the class:
-- Declare a private constructor so that only the class can create an instance of itself.
-- Declare a `getInstance()` method as the only point of access.  Whether the unique instance
-  exists or not, this is the only way another class can access it.
-- Keep a reference to the unique instance in a private class variable.
-
-```java
-/**
- * A class for a chocolate boiler in a factory with a single boiler.
- *
- * If more than one boiler is instantiated in a program, bad things can happen.  (e.g. the
- * program creates two boiler instances and fills up an full boiler -> overflow!)
- */
-public class ChocolateBoiler {
-
-  private boolean isEmpty;
-  private boolean isBoiled;
-  private static ChocolateBoiler uniqueInstance;
-
-  /**
-   * Private constructor that creates an empty, non-boiled chocolate boiler.
-   */
-  private ChocolateBoiler(){
-    this.isEmpty = false;
-    this.isBoiled = false;
-  }
-
-  /**
-   * A method for accessing the chocolate boiler.  If no boiler has been instantiated, the
-   * private constructor is called to create a new one first, then the boiler is returned.
-   * Else it just returns the unique boiler.
-   *
-   * @return the unique instance of the class, i.e. ChocolateBoiler.uniqueInstance
-   */
-  public static ChocolateBoiler getInstance(){
-    if(uniqueInstance == null){
-      uniqueInstance = new ChocolateBoiler();
-    }
-    return uniqueInstance;
-  }
-
-  // Other useful methods...
-}
-```
-
-# Command Pattern
+## Command Pattern
 
 This pattern encapsulates requests as objects, thereby letting you parametrize other objects with different requests,  queue or log requests and support undoable operations.  It decouples the requester of an action from the object that actually performs the action.
 
@@ -602,7 +763,7 @@ A command object encapsulates a request by binding together a set of actions on 
 
 In general, we strive for “dumb” command objects that just invoke an action on the receiver, so we can maintain the same level of decoupling between the invoker and the receiver.
 
-## Example: Global Remote Control
+### Example: Global Remote Control
 
 We begin with the **`Invoker`** class which will be completely decoupled from the actual receiver classes.  It will simply interact with the messenger `Command` interface.
 
@@ -865,143 +1026,9 @@ Garage door is up.
 The light in the front porch is on.
 ```
 
-# Adapter Pattern
+## Template Pattern
 
-Converts the interface of a class into another interface the client expects.  Adapter lets classes work together that otherwise couldn't, without changing the code in either one of them.
-
-![Adapter UML](docs/adapter-uml.png)
-
-In decorator, we wrapped classes in decorators to give them new responsibilities.  With adapter, we wrap classes in an adapter to make them look like something they're not.
-
-## Example: Turkey Adapters
-
-Suppose you have a program with some ducks.  You're short on `Duck` objects and you'd like to use some `Turkey` objects in their place.  You can't just cast a Turkey as a Duck nor can you alter the vendor's code for the Turkey class. So **we'll write an adapter class that wraps a `Turkey` and translates its implementation in a way that is compatible with the `Duck` interface**.
-
-For now here is the `Duck` interface and one of its concrete implementations:
-
-```java
-public interface Duck {
-    public void quack();
-    public void fly();
-}
-```
-
-```java
-/**
- * A class for a mallard duck that implements the Duck interface.  A duck quacks and flies.
- */
-public class MallardDuck implements Duck{
-
-    @Override
-    public void quack() {
-        System.out.println("Quack!");
-    }
-
-    @Override
-    public void fly() {
-        System.out.println("I'm flying, soaring...");
-    }
-}
-```
-
-Below is the `Turkey` interface and a concrete implementation that we got from the vendor.  Notice that tukeys don't quack, but gobble.  They also can't fly very long distances at once.
-
-```java
-public interface Turkey {
-    public void gobble();
-    public void fly();
-}
-```
-
-```java
-public class WildTurkey implements Turkey{
-
-    @Override
-    public void gobble() {
-        System.out.println("Gobble, gobble!!");
-    }
-
-    @Override
-    public void fly() {
-        System.out.println("I'm flying for 100 metres...");
-    }
-}
-```
-
-Now we are going to create an `Adapter` class that implements the `Duck` class by taking in a `Turkey` object and implements the required duck methods in terms of turkey methods. This approach of wrapping the adaptee with an altered interface has the added advantage that we can use the adapter with any subclass of the adaptee.
-
-```java
-/**
- * A class for an adapter from the Turkey interface to the Duck interface.
- */
-public class TurkeyAdapter implements Duck{
-
-    private Turkey turkey;
-
-    /**
-     * Creates a new TurkeyAdapter that takes in a Turkey and adapts it to have Duck behaviour.
-     * @param turkey Turkey object to be wrapped in the adapter.
-     */
-    public TurkeyAdapter(Turkey turkey){
-        this.turkey = turkey;
-    }
-
-    // The quack translation is to call the turkey's gobble method.
-    @Override
-    public void quack() {
-        this.turkey.gobble();
-    }
-
-    // Turkeys fly in short spurts.  To map between a Duck's fly() and a Turkey's we must call the
-    // the turkey's method fly() five times to make up for it and fly an equivalent distance.
-    @Override
-    public void fly() {
-        for(int i = 0; i < 5; i++ ){
-            this.turkey.fly();
-        }
-    }
-}
-```
-
-Now notice how the client can freely work with the `Duck` inteface it expects:
-
-```java
-public class Client {
-
-    public static void main(String[] args) {
-
-        // Create a Duck object
-        Duck realDuck = new MallardDuck();
-
-        // Create a Turkey object wrapped in an adapter
-        Duck fakeDuck = new TurkeyAdapter(new WildTurkey());
-
-        // Notice how the client can freely work with the Duck interface it expects
-        realDuck.quack();
-        fakeDuck.quack();
-
-        realDuck.fly();
-        fakeDuck.fly();
-    }
-}
-```
-
-```
-Quack!
-Gobble, gobble!!
-I'm flying for 500 metres...
-I'm flying for 100 metres...
-I'm flying for 100 metres...
-I'm flying for 100 metres...
-I'm flying for 100 metres...
-I'm flying for 100 metres... 
-```
-
-# Facade Pattern
-
-# Template Pattern
-
-# Iterator Pattern
+## Iterator Pattern
 
 Provides a way to access the elements of an aggregate object sequentially without exposing its underlying representation.
 
@@ -1010,7 +1037,7 @@ Provides a way to access the elements of an aggregate object sequentially withou
 
 ![Iterator UML](docs/iterator-uml.png)
 
-## Example: Song Iterator
+### Example: Song Iterator
 
 Suppose are trying to work with two lists of songs, one is implemented in an `Array` while the other in a `HashMap`.  However, we would like to write one single program that can tranverse both lists seamlessly, after all they are both the same principle: a numbered list of Song objects.
 
@@ -1171,3 +1198,7 @@ Your next song is: Barbie Girl by Aqua
 My next song is: Livin' On a Prayer by Bon Jovi
 Your next song is: Wannabe by Spice Girls
 ```
+
+## State Pattern
+
+## Visitor Pattern
