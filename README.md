@@ -906,8 +906,96 @@ public class MallardDuck implements Duck{
 
 Below is the `Turkey` interface and a concrete implementation that we got from the vendor.  Notice that tukeys don't quack, but gobble.  They also can't fly very long distances at once.
 
+```java
+public interface Turkey {
+    public void gobble();
+    public void fly();
+}
+```
 
+```java
+public class WildTurkey implements Turkey{
 
+    @Override
+    public void gobble() {
+        System.out.println("Gobble, gobble!!");
+    }
+
+    @Override
+    public void fly() {
+        System.out.println("I'm flying for 100 metres...");
+    }
+}
+```
+
+Now we are going to create an `Adapter` class that implements the `Duck` class by taking in a `Turkey` object and implements the required duck methods in terms of turkey methods. This approach of wrapping the adaptee with an altered interface has the added advantage that we can use the adapter with any subclass of the adaptee.
+
+```java
+/**
+ * A class for an adapter from the Turkey interface to the Duck interface.
+ */
+public class TurkeyAdapter implements Duck{
+
+    private Turkey turkey;
+
+    /**
+     * Creates a new TurkeyAdapter that takes in a Turkey and adapts it to have Duck behaviour.
+     * @param turkey Turkey object to be wrapped in the adapter.
+     */
+    public TurkeyAdapter(Turkey turkey){
+        this.turkey = turkey;
+    }
+
+    // The quack translation is to call the turkey's gobble method.
+    @Override
+    public void quack() {
+        this.turkey.gobble();
+    }
+
+    // Turkeys fly in short spurts.  To map between a Duck's fly() and a Turkey's we must call the
+    // the turkey's method fly() five times to make up for it and fly an equivalent distance.
+    @Override
+    public void fly() {
+        for(int i = 0; i < 5; i++ ){
+            this.turkey.fly();
+        }
+    }
+}
+```
+
+Now notice how the client can freely work with the `Duck` inteface it expects:
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+
+        // Create a Duck object
+        Duck realDuck = new MallardDuck();
+
+        // Create a Turkey object wrapped in an adapter
+        Duck fakeDuck = new TurkeyAdapter(new WildTurkey());
+
+        // Notice how the client can freely work with the Duck interface it expects
+        realDuck.quack();
+        fakeDuck.quack();
+
+        realDuck.fly();
+        fakeDuck.fly();
+    }
+}
+```
+
+```
+Quack!
+Gobble, gobble!!
+I'm flying for 500 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres...
+I'm flying for 100 metres... 
+```
 
 # Facade Pattern
 
