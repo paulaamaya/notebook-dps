@@ -76,4 +76,8 @@ public class WeatherReport {
 }
 ```
 
+> **The Hollywood Principle** Don't call us, we'll call you.
+
+Allow low-level components to hook into a system, but let the high-level components determine when they are needed and how.
+
 

@@ -23,6 +23,7 @@
   - [Command Pattern](#command-pattern)
     - [Example: Global Remote Control](#example-global-remote-control)
   - [Template Method Pattern](#template-method-pattern)
+    - [Example: Hot Beverages](#example-hot-beverages)
   - [Iterator Pattern](#iterator-pattern)
     - [Example: Song Iterator](#example-song-iterator)
   - [State Pattern](#state-pattern)
@@ -1099,6 +1100,149 @@ The Template Method suggests that you break down an algorithm into a series of s
 ![Template Method UML](docs\template-method-uml.png)
 
 > The Factory Pattern is in a way a specialization of the Template Method Pattern, by always deferring object creation step to the subclasses.  In the pizza factory example above, the `orderPizza()` method is the Template Method with the `createPizza()` step always being deferred to the subclasses.
+
+Template methods can also include **hooks**.  These are essentially "dummy" methods we define in the super class that subclasses may choose to override or not.  Why would they override a hook? To hook up to the algorithm at any point!
+
+As a general rule, use abstract methods when your subclass MUST provide an implementation of the method in the algorithm.  **Use hooks when that part of the algorithm is optional**.
+
+### Example: Hot Beverages
+
+This is a straightforward application of an abstract class that defines a `TemplateMethod()` for the beverage preparation algorithm and has a hook for the subclasses to jump in, if they wish to do so.  The use of a template method saves us from a having a lot of duplicate code in the `Coffee` and `Tea` classes.
+
+```java
+/**
+ * An abstract class for a caffeinated beverage.  This class controls the recipe algorithm and call on subclasses to
+ * define the brewing and condiment-adding process (depending on an optional hook).
+ */
+public abstract class CaffeineBeverage {
+
+    /**
+     * The template method for preparing a recipe - boiling, brewing, pouring, and condiments.
+     */
+    final void prepareRecipe() {
+        boilWater();
+        brew();
+        pourInCup();
+        if(customerWantsCondiments()) {
+            addCondiments();
+        }
+        System.out.println("Your beverage is ready!\n");
+    }
+
+    /**
+     * Brews the contents of the beverage.
+     */
+    abstract void brew();
+
+    /**
+     * Adds condiments to the beverage.
+     */
+    abstract void addCondiments();
+
+    /**
+     * Boils the water for the beverage.
+     */
+    void boilWater() {
+        System.out.println("Boiling water...");
+    }
+
+    /**
+     * Pours beverage in a cup.
+     */
+    void pourInCup() {
+        System.out.println("Pouring in cup");
+    }
+
+    /**
+     * Hook method that subclasses can override to control if the beverage should have condiments.  If subclasses do
+     * not override this hook, the default behaviour is to add condiments.
+     *
+     * @return true
+     */
+    boolean customerWantsCondiments(){
+        return true;
+    }
+}
+```
+
+Below are the two subclasses that define the `brew()` and `addCondiments()` steps of the preparation algorithm.  The `Coffee` class redefines the hook to allow for user input regading condiments, while the `Tea` class does not.
+
+```java
+public class Tea extends CaffeineBeverage{
+
+    /**
+     * {@inheritDoc}
+     * This implementation steeps tea bags.
+     */
+    @Override
+    void brew() {
+        System.out.println("Steeping tea bags...");
+    }
+
+    /**
+     * {@inheritDoc}
+     * This implementation adds lemon to the tea.
+     */
+    @Override
+    void addCondiments() {
+        System.out.println("Adding lemon");
+    }
+}
+```
+
+```java
+public class Coffee extends CaffeineBeverage{
+    /**
+     * {@inheritDoc}
+     * This implementation brews coffee beans.
+     */
+    @Override
+     void brew() {
+        System.out.println("Brewing coffee beans...");
+    }
+
+    /**
+     * {@inheritDoc}
+     * This implementation adds milk and sugar.
+     */
+    @Override
+    void addCondiments() {
+        System.out.println("Adding milk and sugar");
+    }
+
+    /**
+     * Asks a customer if they would like milk and sugar in their coffee.
+     *
+     * @return true iff customer says 'Yes' to the prompt for milk and sugar.
+     */
+    @Override
+    boolean customerWantsCondiments(){
+        System.out.println("Would you like milk and sugar with your coffee?");
+        Scanner s = new Scanner(System.in);
+
+        String answer = s.nextLine();
+        if(answer.toLowerCase().equals("yes")){
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+As you can see, the client's code is incredibly simple and does not require any messy validation of whether we are making a tea or a coffee - we just simply call the template method on both beverages.
+
+```java
+public class Client {
+
+    public static void main(String[] args) {
+        Coffee coffee = new Coffee();
+        Tea tea = new Tea();
+
+        tea.prepareRecipe();
+        coffee.prepareRecipe();
+    }
+}
+```
 
 ## Iterator Pattern
 
