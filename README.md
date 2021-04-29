@@ -12,6 +12,7 @@
   - [Adapter Pattern](#adapter-pattern)
     - [Example: Turkey Adapters](#example-turkey-adapters)
   - [Facade Pattern](#facade-pattern)
+    - [Example: Home Theatre](#example-home-theatre)
   - [Composite Pattern](#composite-pattern)
   - [Proxy Pattern](#proxy-pattern)
 - [Behavioural Patterns](#behavioural-patterns)
@@ -478,6 +479,69 @@ I'm flying for 100 metres...
 ```
 
 ## Facade Pattern
+
+Provies an interface that simplifies and unifies a set of one or more complex classes that belong to a subsytem.  Facades don't encapsulate the subsystem classes; they simply provide a simplfied interface to their combined functionality.
+
+![Facade UML](docs/facade-uml.png)
+
+- The facade still leaves the subsystem classes available in casse you need their full power.  But if all you need is a straightforward interface, you have the option of using the simplified facade.
+- The facade allows you to decouple the client from any one subsystem class.  If any functionality is added to existing classes (or even if new classes are added) you just need to change the code in the facade.
+
+### Example: Home Theatre
+
+Suppose you have a home theatre with a bunch of fancy electronics.  However, the process of getting ready to watch a movie or listen to a CD can be quite complex...and you have to do the same thing everytime!
+
+We can just define a `HomeTheatreFacade` that unifies all the individual classes - projector, lights, popcorn machine, projector, etc - into a simple interface for entertainment.  If you ever need to do fancier stuff, you can still dig deeper into the any particular class in the subsystem.
+
+```java
+/**
+ * A class for a home theater facade that is composed with a popcorn popper, projector, screen, dvd player, lights, and
+ * and amplifier.
+ */
+public class HomeTheaterFacade{
+  PopcornPopper popper;
+  Projector projector;
+  Screen screen;
+  DVDPlayer dvd;
+  TheatreLights lights;
+  Amplifier amp;
+
+  // Takes in references to each component in the subsystem
+  public HomeTheatre(PopcornPopper popper,
+                Projector projector,
+                Screen screen,
+                DVDPlayer dvd,
+                TheatreLights lights,
+                Amplifier amp){
+      this.popper = popper;
+      this.projector = projector;
+      this.screen = screen;
+      this.dvd = dvd;
+      this.lights = lights;
+      this.amp = amp;
+  }
+
+  // Delegates all the tasks to each component in the subsystem with one single method
+  public void watchMovie(String movie){
+      this.popper.on();
+      this.popper.pop();
+      this.projector.on();
+      this.screen.down();
+      this.dvd.play(movie);
+      this.lights.dim(10);
+      this.amp.setSurroundSound();
+      this.amp.volume(10);
+  }
+
+  public void endMovie(){
+      this.popper.off();
+      this.projector.off();
+      this.screen.up();
+      this.dvd.eject();
+      this.amp.off();
+  }
+}
+```
 
 ## Composite Pattern
 
