@@ -484,7 +484,7 @@ Provies an interface that simplifies and unifies a set of one or more complex cl
 
 ![Facade UML](docs/facade-uml.png)
 
-- The facade still leaves the subsystem classes available in casse you need their full power.  But if all you need is a straightforward interface, you have the option of using the simplified facade.
+- The **facade still leaves the subsystem classes available** in casse you need their full power.  But if all you need is a straightforward interface, you have the option of using the simplified facade.
 - The facade allows you to decouple the client from any one subsystem class.  If any functionality is added to existing classes (or even if new classes are added) you just need to change the code in the facade.
 
 ### Example: Home Theatre
@@ -495,8 +495,8 @@ We can just define a `HomeTheatreFacade` that unifies all the individual classes
 
 ```java
 /**
- * A class for a home theater facade that is composed with a popcorn popper, projector, screen, dvd player, lights, and
- * and amplifier.
+ * A class for a home theater facade that is composed with a popcorn popper, 
+ * projector, screen, dvd player, lights, and and amplifier.
  */
 public class HomeTheaterFacade{
   PopcornPopper popper;
