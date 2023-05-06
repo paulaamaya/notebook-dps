@@ -1097,7 +1097,7 @@ Defines the skeleton of an algorithm in a method, allowing subclases to provide 
 
 The Template Method suggests that you break down an algorithm into a series of steps, turn those steps into methods, and put a sequence of calls to these methods within a superclass `templateMethod()`.
 
-![Template Method UML](docs\template-method-uml.png)
+![Template Method UML](docs/template-method-uml.png)
 
 > The Factory Pattern is in a way a specialization of the Template Method Pattern, by always deferring object creation step to the subclasses.  In the pizza factory example above, the `orderPizza()` method is the Template Method with the `createPizza()` step always being deferred to the subclasses.
 

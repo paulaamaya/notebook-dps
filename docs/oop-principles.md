@@ -80,4 +80,10 @@ public class WeatherReport {
 
 Allow low-level components to hook into a system, but let the high-level components determine when they are needed and how.
 
+> **Single Responsibility Principle** A class should have only one reason to change.
+
+Each responsibility of a class is an area of potential change; more than one responsibility means more than one area of change.
+
+Be diligent in examining your designs and be on the alert for classes that are changing in more than one way as the system grows.
+
 
